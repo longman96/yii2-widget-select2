@@ -7,7 +7,7 @@
  * @version 2.0.4
  */
 
-namespace kartik\select2;
+namespace longman96\select2;
 
 use Yii;
 use yii\helpers\Html;
