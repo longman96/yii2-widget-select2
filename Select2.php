@@ -24,7 +24,7 @@ use yii\base\InvalidConfigException;
  * @since 1.0
  * @see https://github.com/select2/select2
  */
-class Select2 extends \kartik\base\InputWidget
+class Select2 extends InputWidget
 {
     const LARGE = 'lg';
     const MEDIUM = 'md';
@@ -137,10 +137,12 @@ class Select2 extends \kartik\base\InputWidget
                 $this->data = $multiple ? array_combine($key, $val) : [$key => $val];
             }
         }
+
         Html::addCssClass($this->options, 'form-control');
         $this->initLanguage('language', true);
         $this->registerAssets();
         $this->renderInput();
+
     }
 
     /**
@@ -177,6 +179,7 @@ class Select2 extends \kartik\base\InputWidget
         if (empty($this->addon)) {
             return $input;
         }
+
         $group = ArrayHelper::getValue($this->addon, 'groupOptions', []);
         $size = isset($this->size) ? ' input-group-' . $this->size : '';
         Html::addCssClass($group, 'input-group' . $size);
@@ -222,8 +225,10 @@ class Select2 extends \kartik\base\InputWidget
             $this->_loadIndicator = '<div class="kv-plugin-loading loading-' . $this->options['id'] . '">&nbsp;</div>';
             Html::addCssStyle($this->options, 'display:none');
         }
-        $input = $this->getInput('dropDownList', true);
+        $input = $this->getInput('dropDownList', true, true);
+
         echo $this->_loadIndicator . $this->embedAddon($input);
+
     }
 
     /**

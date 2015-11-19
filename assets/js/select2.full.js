@@ -2895,40 +2895,118 @@ S2.define('select2/data/select',[
 
   Utils.Extend(SelectAdapter, BaseAdapter);
 
-  SelectAdapter.prototype.current = function (callback) {
-    var data = [];
-    var self = this;
+  SelectAdapter.prototype.current = function (callback, type, lastentry, lastChange) {
 
-    this.$element.find(':selected').each(function () {
-      var $option = $(this);
+      var data = [];
+      var self = this;
+      var ste = this;
 
-      var option = self.item($option);
+      if(typeof type == "undefined" || type == 'initial'){
 
-      data.push(option);
-    });
+          var initialValues = $('#initialLoadValues').val();
+
+          if(initialValues == ''){
+              this.$element.find(':selected').each(function () {
+                  var $option = $(this);
+
+                  var option = self.item($option);
+
+                  data.push(option);
+              });
+          } else {
+              var split = initialValues.split(',');
+
+              $(split).each(function(key, val){
+                  var ele = ste.$element.find('option[value="' + val + '"]');
+
+                  var option = self.item(ele);
+
+                  data.push(option);
+              });
+          }
+
+      } else {
+
+          var lasttext = $(lastChange).text();
+
+          var split = lasttext.split('×');
+          split = split.filter(function (n) {
+              return n != ""
+          });
+
+          if(type == "select") {
+
+              if (split != '') {
+                  $(split).each(function (key, val) {
+
+                      var ele = ste.$element.find('option[value="' + val + '"]');
+
+                      var option = self.item(ele);
+
+                      console.log(option);
+
+                      data.push(option);
+
+                  });
+              }
+
+              if(typeof lastentry.text == "undefined"){
+                  var newadd = ste.$element.find('option[value="' + lastentry[0].text + '"]');
+              } else {
+                  var newadd = ste.$element.find('option[value="' + lastentry.text + '"]');
+              }
+
+              var optionnew = self.item(newadd);
+
+              data.push(optionnew);
+
+
+          } else {
+              if (split != '') {
+                  $(split).each(function (key, val) {
+                      if(val != lastentry.text) {
+
+                          var ele = ste.$element.find('option[value="' + val + '"]');
+
+                          var option = self.item(ele);
+
+                          console.log(option);
+
+                          data.push(option);
+                      }
+
+                  });
+
+              }
+          }
+      }
 
     callback(data);
   };
 
   SelectAdapter.prototype.select = function (data) {
     var self = this;
-
+      console.log('b');
     data.selected = true;
 
     // If data.element is a DOM node, use it instead
     if ($(data.element).is('option')) {
       data.element.selected = true;
 
-      this.$element.trigger('change');
+      this.$element.trigger('change', ['select', data]);
 
       return;
     }
 
     if (this.$element.prop('multiple')) {
       this.current(function (currentData) {
+
         var val = [];
 
         data = [data];
+
+        var stedata = data;
+
         data.push.apply(data, currentData);
 
         for (var d = 0; d < data.length; d++) {
@@ -2940,7 +3018,7 @@ S2.define('select2/data/select',[
         }
 
         self.$element.val(val);
-        self.$element.trigger('change');
+        self.$element.trigger('change', ['select', stedata]);
       });
     } else {
       var val = data.id;
@@ -2962,7 +3040,7 @@ S2.define('select2/data/select',[
     if ($(data.element).is('option')) {
       data.element.selected = false;
 
-      this.$element.trigger('change');
+      this.$element.trigger('change', ['unselect', data]);
 
       return;
     }
@@ -3007,6 +3085,7 @@ S2.define('select2/data/select',[
   };
 
   SelectAdapter.prototype.query = function (params, callback) {
+
     var data = [];
     var self = this;
 
@@ -4860,11 +4939,15 @@ S2.define('select2/core',[
     this._registerEvents();
 
     // Set the initial state
+
+      var lastchange = $('.select2-selection__rendered');
+
     this.dataAdapter.current(function (initialData) {
+
       self.trigger('selection:update', {
         data: initialData
       });
-    });
+    },'initial','', lastchange);
 
     // Hide the original select
     $element.addClass('select2-hidden-accessible');
@@ -4961,13 +5044,17 @@ S2.define('select2/core',[
 
   Select2.prototype._registerDomEvents = function () {
     var self = this;
+      var lastchange = $('.select2-selection__rendered');
 
-    this.$element.on('change.select2', function () {
-      self.dataAdapter.current(function (data) {
+    this.$element.on('change.select2', function (a,b,c) {
+
+      self.dataAdapter.current( function (data) {
         self.trigger('selection:update', {
           data: data
         });
-      });
+      }, b, c, lastchange);
+
+      lastchange = $('.select2-selection__rendered');
     });
 
     this._sync = Utils.bind(this._syncAttributes, this);
